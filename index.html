@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creative Routing Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: #2a2a33;
+    --accent: #e8ff47;
+    --accent2: #ff6b35;
+    --text: #f0f0f4;
+    --muted: #7a7a8c;
+    --card-bg: #1a1a20;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 28px 40px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .brand { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; color: var(--text); }
+  .brand span { color: var(--accent); }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 18px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--accent); color: #0d0d0f; font-weight: 700; }
+  .tab-btn:not(.active):hover { color: var(--text); background: var(--surface2); }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ─── TOOL ─── */
+  #tool { max-width: 860px; margin: 40px auto; padding: 0 24px 60px; }
+  .intro { text-align: center; margin-bottom: 48px; }
+  .intro h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  .intro h1 em { color: var(--accent); font-style: normal; }
+  .intro p { color: var(--muted); font-size: 15px; max-width: 480px; margin: 0 auto; }
+
+  .progress-bar-wrap { background: var(--surface); border-radius: 99px; height: 4px; margin-bottom: 36px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
+
+  .step-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 40px;
+    animation: slideIn 0.35s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .step-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .step-question { font-family: 'Syne', sans-serif; font-size: clamp(20px, 3.5vw, 28px); font-weight: 700; line-height: 1.2; letter-spacing: -0.5px; margin-bottom: 10px; }
+  .step-hint { color: var(--muted); font-size: 14px; margin-bottom: 28px; font-style: italic; }
+
+  /* Explainer */
+  .explainer {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 22px;
+    margin-bottom: 28px;
+  }
+  .explainer-title { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent2); margin-bottom: 14px; }
+  .explainer-intro { margin-bottom: 14px; font-size: 13px; color: var(--muted); }
+
+  .anim-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .anim-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .anim-box h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .anim-box.simple h4 { color: #64d8cb; }
+  .anim-box.advanced h4 { color: #e855b3; }
+
+  /* CSS demo scenes */
+  .anim-demo { height: 80px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; overflow: hidden; position: relative; }
+  .anim-demo.simple-demo { background: #0a2022; }
+  .anim-demo.adv-demo { background: #100820; }
+
+  /* Simple: staggered text lines */
+  .text-reveal-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 0 16px; width: 100%; }
+  .text-line { height: 9px; border-radius: 3px; background: #64d8cb; animation: textSlide 3s ease infinite; opacity: 0; }
+  .text-line:nth-child(1) { width: 80%; animation-delay: 0s; }
+  .text-line:nth-child(2) { width: 58%; animation-delay: 0.3s; }
+  .text-line:nth-child(3) { width: 40%; animation-delay: 0.6s; }
+  @keyframes textSlide {
+    0%   { opacity: 0; transform: translateX(-14px); }
+    22%  { opacity: 1; transform: translateX(0); }
+    72%  { opacity: 1; transform: translateX(0); }
+    88%  { opacity: 0; }
+    100% { opacity: 0; }
+  }
+
+  /* Advanced: morphing glitch scene */
+  .morph-scene { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .morph-bg {
+    position: absolute; inset: 0;
+    background: conic-gradient(from 0deg at 50% 50%, #3d0066, #e855b3 25%, #ff6b35 50%, #7b2fff 75%, #3d0066);
+    animation: bgSpin 5s linear infinite;
+    opacity: 0.4;
+    filter: blur(16px);
+    transform-origin: center;
+  }
+  @keyframes bgSpin { from { transform: rotate(0deg) scale(1.5); } to { transform: rotate(360deg) scale(1.5); } }
+  .morph-shape {
+    width: 46px; height: 46px;
+    background: linear-gradient(135deg, #e855b3, #7b2fff);
+    box-shadow: 0 0 28px #e855b3aa, 0 0 70px #7b2fff55;
+    animation: morphShape 3.5s ease-in-out infinite;
+    position: relative; z-index: 2;
+  }
+  @keyframes morphShape {
+    0%   { border-radius: 50% 20% 50% 20%; transform: rotate(0deg) scale(1); filter: hue-rotate(0deg); }
+    25%  { border-radius: 20% 50% 20% 50%; transform: rotate(90deg) scale(1.25); filter: hue-rotate(40deg); }
+    50%  { border-radius: 50% 10% 50% 50%; transform: rotate(180deg) scale(0.85); filter: hue-rotate(80deg); }
+    75%  { border-radius: 10% 50% 20% 50%; transform: rotate(270deg) scale(1.2); filter: hue-rotate(120deg); }
+    100% { border-radius: 50% 20% 50% 20%; transform: rotate(360deg) scale(1); filter: hue-rotate(0deg); }
+  }
+  .scan-line {
+    position: absolute; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent 5%, #e855b3 40%, #fff 50%, #e855b3 60%, transparent 95%);
+    animation: scan 2.2s linear infinite;
+    z-index: 3; opacity: 0.85;
+  }
+  @keyframes scan { from { top: -2%; } to { top: 102%; } }
+  .glitch-label {
+    position: absolute; bottom: 8px; left: 12px;
+    font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 800; letter-spacing: 2.5px;
+    color: #e855b3; text-transform: uppercase; z-index: 4;
+    animation: glitch 4s steps(2) infinite;
+  }
+  @keyframes glitch {
+    0%,92% { text-shadow: none; transform: none; }
+    93%    { text-shadow: -2px 0 #ff6b35, 2px 0 #7b2fff; transform: translateX(2px) skewX(-5deg); }
+    95%    { text-shadow: 2px 0 #ff6b35, -2px 0 #7b2fff; transform: translateX(-2px) skewX(5deg); }
+    97%    { text-shadow: none; transform: none; }
+    100%   { text-shadow: none; }
+  }
+  .corner-dots {
+    position: absolute; top: 7px; right: 10px; z-index: 4;
+    display: flex; gap: 4px; align-items: center;
+  }
+  .corner-dot { width: 5px; height: 5px; border-radius: 50%; animation: dotPulse 1.8s ease-in-out infinite; }
+  .corner-dot:nth-child(1) { background: #e855b3; animation-delay: 0s; }
+  .corner-dot:nth-child(2) { background: #ff6b35; animation-delay: 0.3s; }
+  .corner-dot:nth-child(3) { background: #7b2fff; animation-delay: 0.6s; }
+  @keyframes dotPulse { 0%,100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
+
+  /* GIF examples */
+  .anim-gif-wrap { border-radius: 8px; overflow: hidden; margin-bottom: 10px; background: #111; border: 1px solid var(--border); aspect-ratio: 9/16; }
+  .anim-gif-wrap img { width: 100%; height: 100%; object-fit: contain; object-position: center; display: block; background: #111; }
+
+  .anim-box ul { list-style: none; font-size: 11.5px; color: var(--muted); }
+  .anim-box ul li { padding: 2px 0; }
+  .anim-box ul li::before { content: "→ "; opacity: 0.5; }
+
+  .explainer-rule {
+    margin-top: 14px; font-size: 12px; color: var(--muted); font-style: italic;
+    padding: 10px 14px; background: var(--bg); border-radius: 8px; line-height: 1.6;
+  }
+  .explainer-rule strong { color: var(--text); }
+
+  /* Choices */
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .choice-btn {
+    background: var(--surface); border: 1.5px solid var(--border); color: var(--text);
+    border-radius: 14px; padding: 18px 22px; font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 500; cursor: pointer; text-align: left; transition: all 0.2s;
+  }
+  .choice-btn .choice-label { display: block; font-weight: 700; margin-bottom: 4px; }
+  .choice-btn .choice-sub { font-size: 12px; color: var(--muted); }
+  .choice-btn.yes-btn:hover { border-color: #64d8cb; background: var(--surface2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(100,216,203,0.08); }
+  .choice-btn.no-btn:hover { border-color: var(--accent2); background: var(--surface2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,107,53,0.08); }
+
+  .breadcrumb { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+  .crumb { font-size: 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; color: var(--muted); }
+  .crumb .crumb-a { color: var(--accent); font-weight: 600; }
+  .back-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.2s; margin-bottom: 16px;
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--text); }
+
+  /* Result */
+  .result-card { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 36px 40px; animation: slideIn 0.4s ease; }
+  .result-badge {
+    display: inline-block; color: #0d0d0f; font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    border-radius: 6px; padding: 4px 10px; margin-bottom: 16px;
+  }
+  .result-title { font-family: 'Syne', sans-serif; font-size: clamp(22px, 4vw, 32px); font-weight: 800; letter-spacing: -0.5px; margin-bottom: 16px; line-height: 1.15; }
+  .result-desc { background: var(--surface2); border-radius: 12px; padding: 16px 20px; font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
+
+  .result-examples { margin-bottom: 24px; }
+  .result-examples-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .gif-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gif-item {
+    border-radius: 12px; overflow: hidden; background: #111;
+    aspect-ratio: 9/16; max-height: 280px; border: 1px solid var(--border);
+  }
+  .gif-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
+  .gif-item:hover img { transform: scale(1.03); }
+
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .result-section h3 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; font-weight: 700; }
+  .result-section ul { list-style: none; }
+  .result-section ul li {
+    font-size: 13px; color: var(--muted); padding: 5px 0;
+    border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-start;
+  }
+  .result-section ul li::before { content: "◆"; font-size: 7px; margin-top: 6px; flex-shrink: 0; }
+
+  .restart-btn {
+    background: var(--accent); color: #0d0d0f; border: none; border-radius: 10px;
+    padding: 13px 28px; font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 14px; letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s;
+  }
+  .restart-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,255,71,0.2); }
+
+  /* ─── FLOWCHART ─── */
+  #chart { padding: 40px 24px 60px; max-width: 1100px; margin: 0 auto; }
+  #chart h2 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+  #chart .sub { color: var(--muted); margin-bottom: 36px; font-size: 14px; }
+  .flow-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px; }
+  svg.flowchart { display: block; min-width: 900px; width: 100%; height: auto; font-family: 'DM Sans', sans-serif; }
+  .fc-decision { fill: #1e1e28; stroke: #e8ff47; stroke-width: 1.5; }
+  .fc-result { fill: #16202e; stroke: #4a9eff; stroke-width: 1.5; }
+  .fc-start { fill: #1e1e24; stroke: #e8ff47; stroke-width: 2; }
+  .outcome-key { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 28px; }
+  .key-item { background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid #4a9eff; border-radius: 10px; padding: 12px 14px; }
+  .key-item h4 { font-size: 12px; font-weight: 700; margin-bottom: 4px; color: #4a9eff; }
+  .key-item p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  @media (max-width: 600px) {
+    header { padding: 20px 20px 0; }
+    .step-card, .result-card { padding: 24px 20px; }
+    .anim-compare, .choices, .result-grid, .gif-gallery { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Creative<span>Router</span></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('tool',this)">🎯 Decision Tool</button>
+    <button class="tab-btn" onclick="switchTab('chart',this)">📊 Flowchart</button>
+  </div>
+</header>
+
+<div id="tool" class="view active">
+  <div style="max-width:860px;margin:40px auto;padding:0 24px 60px;">
+    <div class="intro">
+      <h1>What kind of creative<br><em>does this need?</em></h1>
+      <p>Answer a few quick questions and we'll route this ask to the right workflow.</p>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar"></div></div>
+    <div id="breadcrumb" class="breadcrumb"></div>
+    <button class="back-btn" id="backBtn" onclick="goBack()" style="display:none;">← Back</button>
+    <div id="stepContainer"></div>
+  </div>
+</div>
+
+<div id="chart" class="view">
+  <h2>Decision Flowchart</h2>
+  <p class="sub">Full logic map for routing creative asks. All paths lead to one of five workflow types.</p>
+  <div class="flow-wrap">
+    <svg class="flowchart" viewBox="0 0 1000 630" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2a2a44"/></marker>
+        <marker id="arr-y" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#64d8cb"/></marker>
+        <marker id="arr-n" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ff6b35"/></marker>
+      </defs>
+      <!-- Start -->
+      <ellipse cx="500" cy="36" rx="48" ry="22" class="fc-start"/>
+      <text x="500" y="36" fill="#f0f0f4" font-size="12" text-anchor="middle" dominant-baseline="middle" font-weight="700">Start</text>
+      <line x1="500" y1="58" x2="500" y2="100" stroke="#2a2a44" stroke-width="1.5" marker-end="url(#arr)"/>
+      <!-- Q1 -->
+      <polygon points="500,100 630,143 500,186 370,143" class="fc-decision"/>
+      <text x="500" y="136" fill="#f0f0f4" font-size="11" text-anchor="middle" dominant-baseline="middle">Strict brand guidelines?</text>
+      <text x="500" y="151" fill="#7a7a8c" font-size="10" text-anchor="middle" dominant-baseline="middle">(no room to stray)</text>
+      <!-- Q1 No left -->
+      <line x1="370" y1="143" x2="245" y2="143" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arr-n)"/>
+      <text x="304" y="134" fill="#ff6b35" font-size="10" font-weight="700" text-anchor="middle">No</text>
+      <!-- Q1 Yes right -->
+      <line x1="630" y1="143" x2="755" y2="143" stroke="#64d8cb" stroke-width="1.5" marker-end="url(#arr-y)"/>
+      <text x="697" y="134" fill="#64d8cb" font-size="10" font-weight="700" text-anchor="middle">Yes</text>
+      <!-- Q2 Left: advanced anim? -->
+      <polygon points="245,143 340,178 245,213 150,178" class="fc-decision"/>
+      <text x="245" y="171" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">Advanced</text>
+      <text x="245" y="185" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">animation?</text>
+      <!-- Q2L Yes → Editor+MG -->
+      <line x1="245" y1="213" x2="245" y2="250" stroke="#64d8cb" stroke-width="1.5"/>
+      <text x="257" y="235" fill="#64d8cb" font-size="10" font-weight="700" dominant-baseline="middle">Yes</text>
+      <line x1="245" y1="250" x2="462" y2="545" stroke="#64d8cb" stroke-width="1.5" marker-end="url(#arr-y)"/>
+      <!-- Q2L No → Q3L -->
+      <line x1="150" y1="178" x2="85" y2="178" stroke="#ff6b35" stroke-width="1.5"/>
+      <text x="114" y="169" fill="#ff6b35" font-size="10" font-weight="700" text-anchor="middle">No</text>
+      <line x1="85" y1="178" x2="85" y2="278" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arr-n)"/>
+      <!-- Q3L: Talking talent? -->
+      <polygon points="85,278 165,310 85,342 5,310" class="fc-decision"/>
+      <text x="85" y="303" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">Talking</text>
+      <text x="85" y="317" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">talent?</text>
+      <!-- Q3L Yes → Editor Only no MG -->
+      <line x1="5" y1="310" x2="5" y2="545" stroke="#64d8cb" stroke-width="1.5" marker-end="url(#arr-y)"/>
+      <text x="16" y="326" fill="#64d8cb" font-size="10" font-weight="700" dominant-baseline="middle">Yes</text>
+      <!-- Q3L No → Q4L -->
+      <line x1="85" y1="342" x2="85" y2="398" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arr-n)"/>
+      <text x="97" y="374" fill="#ff6b35" font-size="10" font-weight="700" dominant-baseline="middle">No</text>
+      <!-- Q4L: ≤10 sec? -->
+      <polygon points="85,398 165,430 85,462 5,430" class="fc-decision"/>
+      <text x="85" y="423" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">10 sec or</text>
+      <text x="85" y="437" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">less?</text>
+      <!-- Q4L Yes → Design Only -->
+      <line x1="165" y1="430" x2="278" y2="430" stroke="#64d8cb" stroke-width="1.5"/>
+      <text x="225" y="421" fill="#64d8cb" font-size="10" font-weight="700" text-anchor="middle">Yes</text>
+      <line x1="278" y1="430" x2="278" y2="545" stroke="#64d8cb" stroke-width="1.5" marker-end="url(#arr-y)"/>
+      <!-- Q4L No → Editor Only no MG (merge left) -->
+      <line x1="5" y1="430" x2="5" y2="510" stroke="#ff6b35" stroke-width="1.5"/>
+      <text x="18" y="448" fill="#ff6b35" font-size="10" font-weight="700" dominant-baseline="middle">No</text>
+      <line x1="5" y1="510" x2="5" y2="545" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arr-n)"/>
+      <!-- Q2 Right: advanced anim? -->
+      <polygon points="755,143 850,178 755,213 660,178" class="fc-decision"/>
+      <text x="755" y="171" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">Advanced</text>
+      <text x="755" y="185" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">animation?</text>
+      <!-- Q2R Yes → Heavy -->
+      <line x1="850" y1="178" x2="926" y2="178" stroke="#64d8cb" stroke-width="1.5"/>
+      <text x="888" y="169" fill="#64d8cb" font-size="10" font-weight="700" text-anchor="middle">Yes</text>
+      <line x1="926" y1="178" x2="926" y2="545" stroke="#64d8cb" stroke-width="1.5" marker-end="url(#arr-y)"/>
+      <!-- Q2R No → Q3R -->
+      <line x1="755" y1="213" x2="755" y2="278" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arr-n)"/>
+      <text x="767" y="248" fill="#ff6b35" font-size="10" font-weight="700" dominant-baseline="middle">No</text>
+      <!-- Q3R: Talking talent? -->
+      <polygon points="755,278 835,310 755,342 675,310" class="fc-decision"/>
+      <text x="755" y="303" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">Talking</text>
+      <text x="755" y="317" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">talent?</text>
+      <!-- Q3R Yes → Heavy -->
+      <line x1="835" y1="310" x2="926" y2="310" stroke="#64d8cb" stroke-width="1.5" marker-end="url(#arr-y)"/>
+      <text x="878" y="301" fill="#64d8cb" font-size="10" font-weight="700" text-anchor="middle">Yes</text>
+      <!-- Q3R No → Q4R -->
+      <line x1="755" y1="342" x2="755" y2="398" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arr-n)"/>
+      <text x="767" y="374" fill="#ff6b35" font-size="10" font-weight="700" dominant-baseline="middle">No</text>
+      <!-- Q4R: ≤10 sec? -->
+      <polygon points="755,398 835,430 755,462 675,430" class="fc-decision"/>
+      <text x="755" y="423" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">10 sec or</text>
+      <text x="755" y="437" fill="#f0f0f4" font-size="10" text-anchor="middle" dominant-baseline="middle">less?</text>
+      <!-- Q4R Yes → Design Only -->
+      <line x1="675" y1="430" x2="360" y2="430" stroke="#64d8cb" stroke-width="1.5"/>
+      <text x="512" y="421" fill="#64d8cb" font-size="10" font-weight="700" text-anchor="middle">Yes → Design Only</text>
+      <line x1="360" y1="430" x2="310" y2="545" stroke="#64d8cb" stroke-width="1.5" marker-end="url(#arr-y)"/>
+      <!-- Q4R No → Light Design -->
+      <line x1="755" y1="462" x2="755" y2="545" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arr-n)"/>
+      <text x="768" y="508" fill="#ff6b35" font-size="10" font-weight="700" dominant-baseline="middle">No</text>
+      <!-- Result boxes -->
+      <rect x="0" y="545" width="172" height="78" rx="10" class="fc-result"/>
+      <text x="86" y="563" fill="#f0f0f4" font-size="10" font-weight="700" text-anchor="middle">Editor Only</text>
+      <text x="86" y="576" fill="#7a7a8c" font-size="9.5" text-anchor="middle">(no Motion Graphics)</text>
+      <text x="86" y="589" fill="#7a7a8c" font-size="9.5" text-anchor="middle">Slight anim · any length</text>
+      <text x="86" y="602" fill="#7a7a8c" font-size="9.5" text-anchor="middle">Room to flex on brand</text>
+      <rect x="197" y="545" width="160" height="78" rx="10" class="fc-result"/>
+      <text x="277" y="563" fill="#f0f0f4" font-size="10" font-weight="700" text-anchor="middle">Design Only</text>
+      <text x="277" y="576" fill="#7a7a8c" font-size="9.5" text-anchor="middle">Strict brand · no talent</text>
+      <text x="277" y="589" fill="#7a7a8c" font-size="9.5" text-anchor="middle">Slight anim · ≤10 sec</text>
+      <text x="277" y="602" fill="#7a7a8c" font-size="9.5" text-anchor="middle">No AI video</text>
+      <rect x="378" y="545" width="176" height="78" rx="10" class="fc-result"/>
+      <text x="466" y="563" fill="#f0f0f4" font-size="10" font-weight="700" text-anchor="middle">Editor Only</text>
+      <text x="466" y="576" fill="#7a7a8c" font-size="9.5" text-anchor="middle">(with Motion Graphics)</text>
+      <text x="466" y="589" fill="#7a7a8c" font-size="9.5" text-anchor="middle">Advanced anim · any length</text>
+      <text x="466" y="602" fill="#7a7a8c" font-size="9.5" text-anchor="middle">Room to flex on brand</text>
+      <rect x="576" y="545" width="184" height="78" rx="10" class="fc-result"/>
+      <text x="668" y="560" fill="#f0f0f4" font-size="10" font-weight="700" text-anchor="middle">Editor + Light Design</text>
+      <text x="668" y="573" fill="#7a7a8c" font-size="9.5" text-anchor="middle">(no Motion Graphics)</text>
+      <text x="668" y="586" fill="#7a7a8c" font-size="9.5" text-anchor="middle">Strict brand · talent OK</text>
+      <text x="668" y="599" fill="#7a7a8c" font-size="9.5" text-anchor="middle">&gt;10 sec · overlays/stickers</text>
+      <rect x="783" y="545" width="210" height="78" rx="10" class="fc-result"/>
+      <text x="888" y="560" fill="#f0f0f4" font-size="10" font-weight="700" text-anchor="middle">Editor + Heavy Design</text>
+      <text x="888" y="573" fill="#7a7a8c" font-size="9.5" text-anchor="middle">(with Motion Graphics)</text>
+      <text x="888" y="586" fill="#7a7a8c" font-size="9.5" text-anchor="middle">Strict brand · any length</text>
+      <text x="888" y="599" fill="#7a7a8c" font-size="9.5" text-anchor="middle">Full storyboards/scenes</text>
+      <!-- connect Q4R No to Light -->
+      <line x1="755" y1="545" x2="726" y2="545" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arr-n)"/>
+      <!-- connect Heavy right -->
+      <line x1="926" y1="545" x2="993" y2="545" stroke="#64d8cb" stroke-width="1.5" marker-end="url(#arr-y)"/>
+    </svg>
+  </div>
+  <div class="outcome-key">
+    <div class="key-item"><h4>Design Only</h4><p>Strict brand, no talking talent, ≤10 sec, slight animation, no AI video.</p></div>
+    <div class="key-item"><h4>Editor Only (no MG)</h4><p>Brand has room to flex, slight animation, any length, talent optional.</p></div>
+    <div class="key-item"><h4>Editor Only (with MG)</h4><p>Brand has room to flex, advanced animation/motion graphics needed, any length.</p></div>
+    <div class="key-item"><h4>Editor + Light Design</h4><p>Strict brand, longer than 10 sec, talent included. Design provides overlays &amp; stickers.</p></div>
+    <div class="key-item"><h4>Editor + Heavy Design</h4><p>Strict brand + advanced animation. Design provides full storyboards/scenes.</p></div>
+  </div>
+</div>
+
+<script>
+const ANIM_EXPLAINER = {
+  title: "🎬 How to tell: Simple vs. Advanced Animation",
+  html: `
+    <p class="explainer-intro">This is the most common point of confusion. Here's the clearest way to think about it — with real examples from each workflow type.</p>
+    <div class="anim-compare">
+      <div class="anim-box simple">
+        <h4>🟢 Simple / Slight Animation</h4>
+        <div class="anim-demo simple-demo">
+          <div class="text-reveal-wrap">
+            <div class="text-line"></div>
+            <div class="text-line"></div>
+            <div class="text-line"></div>
+          </div>
+        </div>
+        <div class="anim-gif-wrap">
+          <img src="images/image_1.gif" alt="Simple anim example" loading="lazy"/>
+        </div>
+        <ul>
+          <li>Text sliding or fading in</li>
+          <li>Logo appearing on a cut</li>
+          <li>Basic lower thirds</li>
+          <li>Simple wipes or reveals</li>
+          <li>Ken Burns on a still photo</li>
+        </ul>
+      </div>
+      <div class="anim-box advanced">
+        <h4>🟣 Advanced / Motion Graphics</h4>
+        <div class="anim-demo adv-demo">
+          <div class="morph-scene">
+            <div class="morph-bg"></div>
+            <div class="morph-shape"></div>
+            <div class="scan-line"></div>
+            <div class="corner-dots">
+              <div class="corner-dot"></div>
+              <div class="corner-dot"></div>
+              <div class="corner-dot"></div>
+            </div>
+            <div class="glitch-label">After Effects</div>
+          </div>
+        </div>
+        <div class="anim-gif-wrap">
+          <img src="images/image_2.gif" alt="Advanced anim example" loading="lazy"/>
+        </div>
+        <ul>
+          <li>Animated brand elements / logo morphs</li>
+          <li>Kinetic typography / tracking text</li>
+          <li>Animated infographics or charts</li>
+          <li>3D compositing, pixel art scenes</li>
+          <li>Particle effects, glows, warps</li>
+        </ul>
+      </div>
+    </div>
+    <div class="explainer-rule">
+      <strong>Quick rule:</strong> If a Premiere editor could build it with basic keyframes in 5 minutes — it's simple. If it needs After Effects, Cinema 4D, or a dedicated motion designer — it's advanced.
+    </div>
+  `
+};
+
+const TREE = {
+  id: 'q1',
+  question: 'Does this have strict brand guidelines?',
+  hint: '"Strict" means no room to stray — exact colors, typography, logo placement, locked layouts.',
+  label: 'Step 1 of 4',
+  progress: 10,
+  choices: [
+    { label: 'Yes — strict, no flexibility', sub: 'Brand team will reject any deviation', answer: 'Strict: Yes', next: 'q2_strict' },
+    { label: 'No — flexible / room to flex', sub: 'Guidelines exist but editor can interpret', answer: 'Strict: No', next: 'q2_flex' }
+  ]
+};
+
+const NODES = {
+  q2_strict: { question: 'Is advanced animation or motion graphics needed?', hint: 'Does this require anything beyond simple cuts, fades, and basic text reveals?', label: 'Step 2 of 4', progress: 35, explainer: ANIM_EXPLAINER, choices: [{ label: 'Yes — advanced motion graphics', sub: 'After Effects, kinetic type, 3D elements, pixel art, etc.', answer: 'Advanced anim: Yes', next: 'result_heavy' }, { label: 'No — simple / slight animation only', sub: 'Basic text slides, fades, simple lower thirds', answer: 'Advanced anim: No', next: 'q3_strict' }] },
+  q2_flex:   { question: 'Is advanced animation or motion graphics needed?', hint: 'Does this require anything beyond simple cuts, fades, and basic text reveals?', label: 'Step 2 of 4', progress: 35, explainer: ANIM_EXPLAINER, choices: [{ label: 'Yes — advanced motion graphics', sub: 'After Effects, kinetic type, 3D elements, pixel art, etc.', answer: 'Advanced anim: Yes', next: 'result_editor_mg' }, { label: 'No — simple / slight animation only', sub: 'Basic text slides, fades, simple lower thirds', answer: 'Advanced anim: No', next: 'q3_flex' }] },
+  q3_strict: { question: 'Does this include talking talent?', hint: 'A presenter, spokesperson, or on-camera personality speaking on screen.', label: 'Step 3 of 4', progress: 60, choices: [{ label: 'Yes — includes talking talent', sub: 'On-camera person, spokesperson, voiceover + face', answer: 'Has talent: Yes', next: 'result_heavy' }, { label: 'No — no talking talent', sub: 'Product-only, b-roll, graphics-only', answer: 'Has talent: No', next: 'q4_strict' }] },
+  q3_flex:   { question: 'Does this include talking talent?', hint: 'A presenter, spokesperson, or on-camera personality speaking on screen.', label: 'Step 3 of 4', progress: 60, choices: [{ label: 'Yes — includes talking talent', sub: 'On-camera person, spokesperson, voiceover + face', answer: 'Has talent: Yes', next: 'result_editor_nomg' }, { label: 'No — no talking talent', sub: 'Product-only, b-roll, graphics-only', answer: 'Has talent: No', next: 'q4_flex' }] },
+  q4_strict: { question: 'Is the spot 10 seconds or less?', hint: 'Think about the intended final cut length, not raw footage.', label: 'Step 4 of 4', progress: 80, choices: [{ label: 'Yes — 10 seconds or under', sub: 'Static social card, short bumper, 6-sec pre-roll', answer: '≤10 sec: Yes', next: 'result_design_only' }, { label: 'No — longer than 10 seconds', sub: '15s, 30s, 60s or longer', answer: '≤10 sec: No', next: 'result_light' }] },
+  q4_flex:   { question: 'Is the spot 10 seconds or less?', hint: 'Think about the intended final cut length, not raw footage.', label: 'Step 4 of 4', progress: 80, choices: [{ label: 'Yes — 10 seconds or under', sub: 'Static social card, short bumper, 6-sec pre-roll', answer: '≤10 sec: Yes', next: 'result_design_only' }, { label: 'No — longer than 10 seconds', sub: '15s, 30s, 60s or longer', answer: '≤10 sec: No', next: 'result_editor_nomg' }] },
+
+  result_design_only: { result: true, title: 'Design Only', color: '#e8ff47', gifs: ['images/image_3.gif', 'images/image_4.gif'], description: 'A short, brand-locked asset that doesn\'t require an editor. The design team handles everything — layout, animation, and output. No AI video, no talent, clean and self-contained.', traits: ['Strict brand alignment (no room to stray)', 'Slight animation only (simple reveals)', 'No talking talent', '10 seconds max', 'No AI video'], who: ['Design team handles end-to-end', 'No editor required', 'Design reviews layout + motion', 'Output goes direct to channel'] },
+  result_editor_nomg: { result: true, title: 'Editor Only\n(without Motion Graphics)', color: '#64d8cb', gifs: ['images/image_5.gif', 'images/image_6.gif'], description: 'Brand guidelines exist but there\'s flexibility in execution. The editor owns the cut with basic animation — no motion designer needed. Any length, talent optional.', traits: ['Brand guidelines with room to flex', 'Slight animation (basic reveals, fades)', 'With or without talent', 'Any length'], who: ['Editor owns the full cut', 'No motion designer needed', 'Basic lower thirds, simple text animation', 'Brand implemented within editor\'s toolkit'] },
+  result_editor_mg:   { result: true, title: 'Editor Only\n(with Motion Graphics)', color: '#e855b3', gifs: ['images/image_7.gif', 'images/image_8.gif'], description: 'The brand has flexibility, but this creative demands advanced animation — kinetic type, complex scenes, or elements that need After Effects or equivalent. The editor must have motion graphics capability.', traits: ['Brand guidelines with room to flex', 'Advanced animation / motion graphics', 'With or without talent', 'Any length'], who: ['Editor must have motion graphics capability', 'After Effects, Cinema 4D, or equivalent', 'Kinetic type, animated brand elements', 'Editor handles both cut + motion'] },
+  result_light:       { result: true, title: 'Editor with Light Design Support\n(without Motion Graphics)', color: '#4a9eff', gifs: ['images/image_9.gif', 'images/image_10.gif'], description: 'Strict brand + a longer piece means the editor needs design backup. Design provides pre-built overlays, stickers, and brand elements for the editor to place. No advanced motion graphics — just brand consistency support.', traits: ['Strong brand alignment (strict)', 'Slight animation', 'Includes talent', 'Longer than 10 seconds', 'Design provides overlays / stickers to place'], who: ['Editor handles main cut', 'Design team provides brand-locked overlays', 'Editor places/slightly animates design assets', 'Close collaboration between design + edit'] },
+  result_heavy:       { result: true, title: 'Editor with Heavy Design Support\n(with Motion Graphics)', color: '#ff6b35', gifs: ['images/image_11.gif', 'images/image_12.gif'], description: 'The most resource-intensive route. Strict brand + advanced motion graphics means design builds full storyboards and animated scenes for the editor to composite. Requires tight planning and collaboration.', traits: ['Strong brand alignment (strict)', 'Advanced animation / motion graphics', 'With or without talent', 'Any length', 'Design provides full storyboards / scenes'], who: ['Editor handles cut and compositing', 'Design team creates storyboards + MG scenes', 'Motion designer animates brand elements', 'Tight design + edit collaboration required'] }
+};
+
+let history = [], current = 'q1';
+
+function getNode(id) { return id === 'q1' ? TREE : NODES[id]; }
+
+function render() {
+  const node = getNode(current);
+  document.getElementById('progressBar').style.width = node.result ? '100%' : (node.progress + '%');
+  document.getElementById('backBtn').style.display = history.length ? 'block' : 'none';
+  document.getElementById('breadcrumb').innerHTML = history.map(h => `<span class="crumb"><span class="crumb-a">${h.answer}</span></span>`).join('');
+
+  if (node.result) { document.getElementById('stepContainer').innerHTML = renderResult(node); return; }
+
+  const expl = node.explainer ? `<div class="explainer"><div class="explainer-title">${node.explainer.title}</div>${node.explainer.html}</div>` : '';
+  const choices = node.choices.map((c, i) => `
+    <button class="choice-btn ${i===0?'yes-btn':'no-btn'}" onclick="choose('${c.next}','${c.answer.replace(/'/g,"\\'")}')">
+      <span class="choice-label">${c.label}</span>
+      <span class="choice-sub">${c.sub}</span>
+    </button>`).join('');
+
+  document.getElementById('stepContainer').innerHTML = `
+    <div class="step-card">
+      <div class="step-label">${node.label}</div>
+      <div class="step-question">${node.question}</div>
+      <div class="step-hint">${node.hint}</div>
+      ${expl}
+      <div class="choices">${choices}</div>
+    </div>`;
+}
+
+function renderResult(n) {
+  const color = n.color;
+  const titles = n.title.split('\n');
+  const traits = n.traits.map(t=>`<li style="--dot:${color}">${t}</li>`).join('');
+  const who = n.who.map(w=>`<li style="--dot:${color}">${w}</li>`).join('');
+  const gifs = n.gifs ? `
+    <div class="result-examples">
+      <div class="result-examples-label">Real examples of this workflow</div>
+      <div class="gif-gallery">
+        ${n.gifs.map(g=>`<div class="gif-item"><img src="${g}" alt="Example" loading="lazy"/></div>`).join('')}
+      </div>
+    </div>` : '';
+
+  return `<div class="result-card" style="border-color:${color}44;box-shadow:0 0 60px ${color}0c">
+    <div class="result-badge" style="background:${color}">✓ Recommended Route</div>
+    <div class="result-title" style="color:${color}">${titles.join('<br/>')}</div>
+    <div class="result-desc">${n.description}</div>
+    ${gifs}
+    <div class="result-grid">
+      <div class="result-section">
+        <h3 style="color:${color}">What this looks like</h3>
+        <ul style="--accent:${color}">${traits}</ul>
+      </div>
+      <div class="result-section">
+        <h3 style="color:${color}">Who's involved</h3>
+        <ul style="--accent:${color}">${who}</ul>
+      </div>
+    </div>
+    <button class="restart-btn" onclick="restart()">← Start Over</button>
+  </div>`;
+}
+
+// dynamic bullet color
+document.head.insertAdjacentHTML('beforeend', `<style>.result-section ul li::before{content:"◆";color:var(--accent,#e8ff47);font-size:7px;margin-top:6px;flex-shrink:0}</style>`);
+
+function choose(next, answer) { history.push({ from: current, answer }); current = next; render(); scrollTo({top:0,behavior:'smooth'}); }
+function goBack() { if (!history.length) return; const l = history.pop(); current = l.from; render(); }
+function restart() { history = []; current = 'q1'; render(); }
+function switchTab(id, btn) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+render();
+</script>
+</body>
+</html>
